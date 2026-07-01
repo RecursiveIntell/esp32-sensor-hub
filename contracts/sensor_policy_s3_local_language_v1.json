@@ -1,0 +1,27 @@
+{
+  "schema": "ri_sensor_policy_s3_contract_v1",
+  "source_receipt": "/home/sikmindz/projects/esp32-sensor-hub/sensor_policy_s3_hard_test_receipt.json",
+  "policy": {
+    "stale_after_ms": 120000,
+    "hot_f": 82.0,
+    "cold_f": 60.0,
+    "humid_pct": 65.0,
+    "dry_pct": 25.0
+  },
+  "prompts": [
+    {"id":"missing_sensor","prompt":"missing sensor. action is ","output":"no claim."},
+    {"id":"stale_data","prompt":"stale data. action is ","output":"wait for fresh data."},
+    {"id":"high_heat_humidity","prompt":"high heat and humidity. action is ","output":"escalate."},
+    {"id":"hot_room","prompt":"hot room. action is ","output":"check airflow."},
+    {"id":"humid_room","prompt":"humid room. action is ","output":"ventilate."},
+    {"id":"normal_room","prompt":"normal room. action is ","output":"log receipt."},
+    {"id":"safe_action","prompt":"safe action is ","output":"no claim without evidence."},
+    {"id":"local_first_means","prompt":"local first means ","output":"decide before cloud."}
+  ],
+  "receipt_schemas": [
+    "ri_esp_proof_receipt_v1",
+    "ri_esp32s3_local_language_v1",
+    "ri_sensor_policy_to_s3_language_integration_v1"
+  ],
+  "claim_boundary": "Deterministic policy selects canonical prompts; ESP32-S3 local-language only phrases supported prompts; OLED pixels require attached hardware."
+}

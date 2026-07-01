@@ -1,0 +1,197 @@
+{
+  "finished_unix": 1782942642.1423056,
+  "http_bridge": {
+    "failures": [],
+    "ok": true,
+    "rows": [
+      {
+        "case": "proof_override_hot_humid",
+        "oled_text": "escalate.",
+        "output": "escalate.",
+        "prompt": "high heat and humidity. action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_missing_sensor",
+        "oled_text": "no claim.",
+        "output": "no claim.",
+        "prompt": "missing sensor. action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_stale_sensor",
+        "oled_text": "wait for fresh data.",
+        "output": "wait for fresh data.",
+        "prompt": "stale data. action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_hot_humid",
+        "oled_text": "escalate.",
+        "output": "escalate.",
+        "prompt": "high heat and humidity. action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_hot",
+        "oled_text": "check airflow.",
+        "output": "check airflow.",
+        "prompt": "hot room. action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_humid",
+        "oled_text": "ventilate.",
+        "output": "ventilate.",
+        "prompt": "humid room. action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_cold_unsupported_safe",
+        "oled_text": "no claim without evidence.",
+        "output": "no claim without evidence.",
+        "prompt": "safe action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_dry_unsupported_safe",
+        "oled_text": "no claim without evidence.",
+        "output": "no claim without evidence.",
+        "prompt": "safe action is ",
+        "source": "host_canonical_p15_lookup"
+      },
+      {
+        "case": "derived_normal",
+        "oled_text": "log receipt.",
+        "output": "log receipt.",
+        "prompt": "normal room. action is ",
+        "source": "host_canonical_p15_lookup"
+      }
+    ],
+    "used_s3": false
+  },
+  "ok": true,
+  "policy_unit": {
+    "failures": [],
+    "ok": true,
+    "rows": [
+      {
+        "case": "proof_override_hot_humid",
+        "output": "escalate.",
+        "prompt": "high heat and humidity. action is ",
+        "source": "proof.local_language_prompt"
+      },
+      {
+        "case": "derived_missing_sensor",
+        "output": "no claim.",
+        "prompt": "missing sensor. action is ",
+        "source": "derived.sensor_missing"
+      },
+      {
+        "case": "derived_stale_sensor",
+        "output": "wait for fresh data.",
+        "prompt": "stale data. action is ",
+        "source": "derived.stale_reading"
+      },
+      {
+        "case": "derived_hot_humid",
+        "output": "escalate.",
+        "prompt": "high heat and humidity. action is ",
+        "source": "derived.hot_humid"
+      },
+      {
+        "case": "derived_hot",
+        "output": "check airflow.",
+        "prompt": "hot room. action is ",
+        "source": "derived.hot"
+      },
+      {
+        "case": "derived_humid",
+        "output": "ventilate.",
+        "prompt": "humid room. action is ",
+        "source": "derived.humid"
+      },
+      {
+        "case": "derived_cold_unsupported_safe",
+        "output": "no claim without evidence.",
+        "prompt": "safe action is ",
+        "source": "derived.unsupported_cold_or_dry"
+      },
+      {
+        "case": "derived_dry_unsupported_safe",
+        "output": "no claim without evidence.",
+        "prompt": "safe action is ",
+        "source": "derived.unsupported_cold_or_dry"
+      },
+      {
+        "case": "derived_normal",
+        "output": "log receipt.",
+        "prompt": "normal room. action is ",
+        "source": "derived.normal"
+      }
+    ]
+  },
+  "real_s3_prompts": null,
+  "schema": "ri_sensor_policy_s3_hard_test_v1",
+  "started_unix": 1782942641.624723,
+  "static_bridge": {
+    "failures": [],
+    "ok": true,
+    "rows": [
+      {
+        "case": "proof_override_hot_humid",
+        "oled_text": "escalate.",
+        "output": "escalate.",
+        "prompt": "high heat and humidity. action is "
+      },
+      {
+        "case": "derived_missing_sensor",
+        "oled_text": "no claim.",
+        "output": "no claim.",
+        "prompt": "missing sensor. action is "
+      },
+      {
+        "case": "derived_stale_sensor",
+        "oled_text": "wait for fresh data.",
+        "output": "wait for fresh data.",
+        "prompt": "stale data. action is "
+      },
+      {
+        "case": "derived_hot_humid",
+        "oled_text": "escalate.",
+        "output": "escalate.",
+        "prompt": "high heat and humidity. action is "
+      },
+      {
+        "case": "derived_hot",
+        "oled_text": "check airflow.",
+        "output": "check airflow.",
+        "prompt": "hot room. action is "
+      },
+      {
+        "case": "derived_humid",
+        "oled_text": "ventilate.",
+        "output": "ventilate.",
+        "prompt": "humid room. action is "
+      },
+      {
+        "case": "derived_cold_unsupported_safe",
+        "oled_text": "no claim without evidence.",
+        "output": "no claim without evidence.",
+        "prompt": "safe action is "
+      },
+      {
+        "case": "derived_dry_unsupported_safe",
+        "oled_text": "no claim without evidence.",
+        "output": "no claim without evidence.",
+        "prompt": "safe action is "
+      },
+      {
+        "case": "derived_normal",
+        "oled_text": "log receipt.",
+        "output": "log receipt.",
+        "prompt": "normal room. action is "
+      }
+    ]
+  }
+}

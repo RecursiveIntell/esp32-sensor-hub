@@ -1,0 +1,14 @@
+.pio/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.bin
+*.elf
+*.map
+*.log
+.pioenvs/
+.piolibdeps/
+secrets.h
+secrets.py
+gemma_ai.env
