@@ -8,6 +8,7 @@
 #include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
 #include "config.h"
+#include "sensor_policy_contract.h"
 
 #ifndef WIFI_PASSWORD_PRIMARY
 #define WIFI_PASSWORD_PRIMARY ""
@@ -247,24 +248,31 @@ float sentinelConfidence() {
 
 
 String canonicalLocalLanguagePrompt() {
-  if (!state.valid) return "missing sensor. action is ";
-  if (state.last_read_ms > 0 && millis() - state.last_read_ms > 120000UL) return "stale data. action is ";
-  bool hot = state.temperature_f >= 82.0f;
-  bool cold = state.temperature_f <= 60.0f;
-  bool humid = state.humidity_pct >= 65.0f;
-  bool dry = state.humidity_pct <= 25.0f;
-  if (hot && humid) return "high heat and humidity. action is ";
-  if (hot) return "hot room. action is ";
-  if (humid) return "humid room. action is ";
-  if (cold || dry) return "safe action is ";
-  return "normal room. action is ";
+  if (!state.valid) return RI_PROMPT_MISSING_SENSOR;
+  if (state.last_read_ms > 0 && millis() - state.last_read_ms > RI_POLICY_STALE_AFTER_MS) return RI_PROMPT_STALE_DATA;
+  bool hot = state.temperature_f >= RI_POLICY_HOT_F;
+  bool cold = state.temperature_f <= RI_POLICY_COLD_F;
+  bool humid = state.humidity_pct >= RI_POLICY_HUMID_PCT;
+  bool dry = state.humidity_pct <= RI_POLICY_DRY_PCT;
+  if (hot && humid) return RI_PROMPT_HIGH_HEAT_HUMIDITY;
+  if (hot) return RI_PROMPT_HOT_ROOM;
+  if (humid) return RI_PROMPT_HUMID_ROOM;
+  if (cold || dry) return RI_PROMPT_SAFE_ACTION;
+  return RI_PROMPT_NORMAL_ROOM;
 }
 
 String routeReason(const String &trigger = "schedule_tick") {
   if (!state.valid) return "sensor_missing";
+  if (state.last_read_ms > 0 && millis() - state.last_read_ms > RI_POLICY_STALE_AFTER_MS) return "stale_reading";
   if (trigger == "operator_request") return "operator_request";
-  if (state.humidity_pct > 75.0f || state.humidity_pct < 20.0f) return "humidity_out_of_range";
-  if (state.temperature_c > 30.0f || state.temperature_c < 15.0f) return "temperature_out_of_range";
+  bool hot = state.temperature_f >= RI_POLICY_HOT_F;
+  bool cold = state.temperature_f <= RI_POLICY_COLD_F;
+  bool humid = state.humidity_pct >= RI_POLICY_HUMID_PCT;
+  bool dry = state.humidity_pct <= RI_POLICY_DRY_PCT;
+  if (hot && humid) return "temperature_and_humidity_out_of_range";
+  if (cold || dry) return "unsupported_cold_or_dry";
+  if (humid) return "humidity_out_of_range";
+  if (hot) return "temperature_out_of_range";
   if (sentinelConfidence() < 0.75f) return "low_confidence";
   if (trigger == "anomaly_match") return "anomaly_match";
   if (trigger == "schedule_tick") return "schedule_tick";
@@ -343,8 +351,9 @@ String sensorJson(bool include_ai_envelope = false, const String &request_body =
   proof["route_reason"] = reason;
   proof["sentinel_confidence"] = sentinelConfidence();
   proof["ai_route"] = OLLAMA_MODEL;
-  proof["local_language_model"] = "esp32s3_h320_p15";
+  proof["local_language_model"] = RI_LOCAL_LANGUAGE_MODEL;
   proof["local_language_prompt"] = canonicalLocalLanguagePrompt();
+  proof["local_language_contract"] = RI_SENSOR_POLICY_CONTRACT_SCHEMA;
   JsonObject proof_sensor = proof["sensor"].to<JsonObject>();
   proof_sensor["temperature_c"] = state.valid ? state.temperature_c : NAN;
   proof_sensor["humidity_pct"] = state.valid ? state.humidity_pct : NAN;

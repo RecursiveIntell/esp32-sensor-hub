@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import time
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -102,6 +103,62 @@ def assert_eq(got, exp, label, failures):
         failures.append({"label": label, "expected": exp, "got": got})
 
 
+def run_contract_header_tests():
+    failures = []
+    contract_path = ROOT / "contracts" / "sensor_policy_s3_local_language_v1.json"
+    header_path = ROOT / "include" / "sensor_policy_contract.h"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    header = header_path.read_text(encoding="utf-8")
+    macros = {}
+    for line in header.splitlines():
+        m = re.match(r"#define\s+(RI_[A-Z0-9_]+)\s+\"(.*)\"\s*$", line)
+        if m:
+            macros[m.group(1)] = m.group(2)
+    constants = {}
+    for line in header.splitlines():
+        m = re.match(r"static constexpr (?:unsigned long|float)\s+(RI_POLICY_[A-Z0-9_]+)\s+=\s+([^;]+);", line)
+        if m:
+            constants[m.group(1)] = m.group(2).replace("UL", "").replace("f", "")
+    prompts = {row["id"]: row for row in contract["prompts"]}
+    expected_macros = {
+        "RI_SENSOR_POLICY_CONTRACT_SCHEMA": contract["schema"],
+        "RI_PROMPT_MISSING_SENSOR": prompts["missing_sensor"]["prompt"],
+        "RI_PROMPT_STALE_DATA": prompts["stale_data"]["prompt"],
+        "RI_PROMPT_HIGH_HEAT_HUMIDITY": prompts["high_heat_humidity"]["prompt"],
+        "RI_PROMPT_HOT_ROOM": prompts["hot_room"]["prompt"],
+        "RI_PROMPT_HUMID_ROOM": prompts["humid_room"]["prompt"],
+        "RI_PROMPT_NORMAL_ROOM": prompts["normal_room"]["prompt"],
+        "RI_PROMPT_SAFE_ACTION": prompts["safe_action"]["prompt"],
+        "RI_OUTPUT_MISSING_SENSOR": prompts["missing_sensor"]["output"],
+        "RI_OUTPUT_STALE_DATA": prompts["stale_data"]["output"],
+        "RI_OUTPUT_HIGH_HEAT_HUMIDITY": prompts["high_heat_humidity"]["output"],
+        "RI_OUTPUT_HOT_ROOM": prompts["hot_room"]["output"],
+        "RI_OUTPUT_HUMID_ROOM": prompts["humid_room"]["output"],
+        "RI_OUTPUT_NORMAL_ROOM": prompts["normal_room"]["output"],
+        "RI_OUTPUT_SAFE_ACTION": prompts["safe_action"]["output"],
+    }
+    for key, expected in expected_macros.items():
+        assert_eq(macros.get(key), expected, "contract_header:" + key, failures)
+    expected_constants = {
+        "RI_POLICY_STALE_AFTER_MS": str(contract["policy"]["stale_after_ms"]),
+        "RI_POLICY_HOT_F": str(contract["policy"]["hot_f"]),
+        "RI_POLICY_COLD_F": str(contract["policy"]["cold_f"]),
+        "RI_POLICY_HUMID_PCT": str(contract["policy"]["humid_pct"]),
+        "RI_POLICY_DRY_PCT": str(contract["policy"]["dry_pct"]),
+    }
+    for key, expected in expected_constants.items():
+        got = constants.get(key)
+        if got is not None:
+            try:
+                same = float(got) == float(expected)
+            except ValueError:
+                same = got == expected
+            if not same:
+                failures.append({"label": "contract_header:" + key, "expected": expected, "got": got})
+        else:
+            failures.append({"label": "contract_header:" + key, "expected": expected, "got": None})
+    return {"ok": not failures, "failures": failures, "macros_checked": len(expected_macros), "constants_checked": len(expected_constants)}
+
 def run_policy_unit_tests():
     failures = []
     rows = []
@@ -190,6 +247,7 @@ def main():
     result = {
         "schema": "ri_sensor_policy_s3_hard_test_v1",
         "started_unix": time.time(),
+        "contract_header": run_contract_header_tests(),
         "policy_unit": run_policy_unit_tests(),
         "static_bridge": run_static_bridge_tests(),
         "real_s3_prompts": None,
@@ -199,7 +257,7 @@ def main():
         result["real_s3_prompts"] = run_real_s3_prompt_tests(args.s3_port, args.rounds, args.timeout_s)
     result["http_bridge"] = run_http_tests(0, args.s3_port if args.http_real_s3 else None, args.timeout_s)
     result["finished_unix"] = time.time()
-    sections = [result["policy_unit"], result["static_bridge"], result["http_bridge"]]
+    sections = [result["contract_header"], result["policy_unit"], result["static_bridge"], result["http_bridge"]]
     if result["real_s3_prompts"] is not None:
         sections.append(result["real_s3_prompts"])
     result["ok"] = all(s and s.get("ok") for s in sections)
@@ -208,6 +266,7 @@ def main():
     print(json.dumps({
         "ok": result["ok"],
         "out": str(out),
+        "contract_header_ok": result["contract_header"]["ok"],
         "policy_cases": len(result["policy_unit"]["rows"]),
         "static_bridge_cases": len(result["static_bridge"]["rows"]),
         "http_cases": len(result["http_bridge"]["rows"]),

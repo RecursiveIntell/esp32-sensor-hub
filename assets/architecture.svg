@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" role="img" aria-label="ESP32 sensor hub data flow">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#101827"/></linearGradient>
+    <linearGradient id="box" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#172554"/><stop offset="1" stop-color="#0f766e"/></linearGradient>
+    <style>
+      text{font-family:Inter,Arial,sans-serif;fill:#e5f3ff}.title{font-size:30px;font-weight:800}.sub{font-size:15px;fill:#b9d4e8}.box{fill:url(#box);stroke:#67e8f9;stroke-width:2;rx:18}.small{font-size:14px}.label{font-size:18px;font-weight:700}.line{stroke:#93c5fd;stroke-width:3;fill:none;marker-end:url(#arrow)}.guard{fill:#3b1d09;stroke:#fb923c;stroke-width:2;rx:14}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0l10 5-10 5z" fill="#93c5fd"/></marker>
+  </defs>
+  <rect width="1120" height="520" fill="url(#bg)"/>
+  <text x="40" y="55" class="title">ESP32 sensor hub: deterministic policy → S3 local language → OLED-ready text</text>
+  <text x="40" y="84" class="sub">Receipts first. The ESP32 chooses a canonical prompt; the ESP32-S3 model only phrases proven prompts.</text>
+  <rect x="45" y="135" width="195" height="112" class="box"/><text x="70" y="172" class="label">DHT/OLED node</text><text x="70" y="202" class="small">ESP32/ESP32-S3</text><text x="70" y="225" class="small">sensor proof JSON</text>
+  <path d="M240 190 C285 190 295 190 335 190" class="line"/>
+  <rect x="335" y="125" width="230" height="132" class="box"/><text x="360" y="160" class="label">receiver bridge</text><text x="360" y="190" class="small">/api/sensor</text><text x="360" y="213" class="small">/api/local_language</text><text x="360" y="236" class="small">JSONL receipts</text>
+  <path d="M565 190 C610 190 625 190 670 190" class="line"/>
+  <rect x="670" y="125" width="220" height="132" class="box"/><text x="696" y="160" class="label">S3 local language</text><text x="696" y="190" class="small">PROMPT:&lt;canonical&gt;</text><text x="696" y="213" class="small">S3_LANGUAGE_RECEIPT</text><text x="696" y="236" class="small">H320 p15 firmware</text>
+  <path d="M780 257 C780 315 205 315 205 257" class="line"/>
+  <rect x="130" y="350" width="305" height="96" class="guard"/><text x="155" y="385" class="label">OLED boundary</text><text x="155" y="414" class="small">logic path tests exact oled_text</text><text x="155" y="437" class="small">pixels require attached display</text>
+  <rect x="535" y="350" width="455" height="96" class="guard"/><text x="560" y="385" class="label">shared contract</text><text x="560" y="414" class="small">contracts/sensor_policy_s3_local_language_v1.json</text><text x="560" y="437" class="small">mirrors ri-esp-policy + ri-esp-local-language crates</text>
+</svg>

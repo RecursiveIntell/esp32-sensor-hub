@@ -1,5 +1,11 @@
 {
-  "finished_unix": 1782942642.1423056,
+  "contract_header": {
+    "constants_checked": 5,
+    "failures": [],
+    "macros_checked": 15,
+    "ok": true
+  },
+  "finished_unix": 1782944060.4809346,
   "http_bridge": {
     "failures": [],
     "ok": true,
@@ -133,7 +139,7 @@
   },
   "real_s3_prompts": null,
   "schema": "ri_sensor_policy_s3_hard_test_v1",
-  "started_unix": 1782942641.624723,
+  "started_unix": 1782944059.9628441,
   "static_bridge": {
     "failures": [],
     "ok": true,

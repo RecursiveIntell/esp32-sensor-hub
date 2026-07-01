@@ -1,50 +1,79 @@
 # ESP32 Sensor Hub
 
-Firmware + local receiver for an ESP32 that:
+![ESP32 sensor hub architecture](assets/architecture.svg)
 
-- connects to WiFi SSID `purplemama`
-- reads a temp/humidity sensor
-- displays live values on a 1 inch I2C OLED
-- sends JSON sensor readings to a computer over HTTP
-- exposes local ESP32 HTTP endpoints for status and AI forwarding
-- periodically sends rich sensor/device context to the GTX 1070 Gemma4 endpoint
-- streams the Gemma response back onto the OLED as text arrives
-- is structured so more sensors can be added later without rewriting the whole sketch
+ESP32/ESP32-S3 room sensor firmware plus a local receiver bridge. It reads DHT temperature/humidity, displays status on SSD1306 OLED, emits receipt-backed sensor JSON, and routes deterministic sensor policy prompts into an ESP32-S3 local-language model.
 
-## Assumed hardware
+This is local-first physical AI plumbing, not a cloud demo.
 
-Default firmware target:
+## What it gives you
 
-- ESP32 dev board: `esp32dev` PlatformIO target
-- Temp/humidity sensor: DHT22 on GPIO4
-- OLED: 1 inch SSD1306 I2C, 128x64, address 0x3C
-- I2C pins: SDA GPIO21, SCL GPIO22
+- ESP32/ESP32-S3 firmware for DHT + OLED + WiFi.
+- HTTP sensor posting to a local receiver.
+- Local ESP32 endpoints for `/status`, `/sensors`, `/ai`, and `/ai/stream`.
+- Optional GTX/Ollama endpoint path for larger model responses.
+- Deterministic sensor-policy to ESP32-S3 local-language bridge.
+- Machine-readable receipts for sensor readings and local-language outputs.
+- Shared contract file to reduce drift between Rust crates, Python receiver, and firmware constants.
 
-If the sensor is DHT11, change `DHT_TYPE` in `include/config.h`.
-If the OLED is 128x32, change `OLED_HEIGHT` to 32.
-If this is an ESP32-S3 N16R8 board, do NOT use GPIO8/9 for I2C; use safe pins like GPIO21 plus GPIO47 if exposed.
+## Data flow
 
-## Files
+1. Sensor node reads DHT temperature/humidity.
+2. Firmware builds `ri_esp_proof_receipt_v1` evidence.
+3. Deterministic policy maps the reading to one canonical prompt.
+4. Receiver sends `PROMPT:<canonical prompt>` to the ESP32-S3 language board when configured.
+5. ESP32-S3 returns `S3_LANGUAGE_RECEIPT` with short OLED-ready text.
+6. Receiver writes JSONL receipts and returns `oled_text`.
+7. Sensor node displays returned text on OLED when hardware is attached.
 
-- `platformio.ini` - PlatformIO build config
-- `include/config.h.example` - copy to `include/config.h`, add WiFi password and server IPs
-- `src/main.cpp` - ESP32 firmware
-- `tools/sensor_receiver.py` - local computer HTTP receiver for sensor readings
-- `tools/ai_infer_stub.py` - simple fake AI endpoint for plumbing tests
-- `tools/ai_infer_gemma_ollama.py` - real Ollama-backed AI endpoint, default model `gemma4:12b`
-- `tools/run_gemma_ai.sh` - launches the Gemma/Ollama endpoint on port 8090
-- `tools/check_gemma_ai.sh` - verifies Ollama and the configured model are reachable
-- `tools/pull_gemma_model.sh` - pulls the configured Ollama model on the GTX box
-- `tools/gemma_ai.env.example` - environment template for the Gemma endpoint
-- `docs/architecture.md` - use cases and expansion plan
-- `docs/wiring.md` - wiring notes
+## Claim boundary
+
+Proven by receipts:
+
+- firmware builds for `esp32dev` and `esp32s3`
+- receiver policy cases pass
+- HTTP `/api/local_language` returns expected `oled_text`
+- real ESP32-S3 local-language prompt receipts were previously tested on `/dev/ttyACM0`
+- cold/dry unsupported conditions map to safe no-claim language
+- stale readings map to stale-data language
+
+Not claimed without attached hardware:
+
+- SSD1306 pixels physically render
+- I2C address/wiring are correct on an arbitrary board
+- GTX/Ollama endpoint is installed on every target machine
+
+## Hardware profile
+
+Default PlatformIO env: `esp32dev`
+
+- DHT sensor on GPIO4; `include/config.h.example` currently uses DHT11, change `DHT_TYPE` to DHT22 for AM2302/DHT22 hardware
+- SSD1306 OLED, 128x64, I2C address `0x3C`
+- ESP32 default I2C: SDA GPIO21, SCL GPIO22
+- ESP32-S3 warning: do not use GPIO8/9 for I2C on N16R8/PSRAM boards; use safe exposed pins such as GPIO21/GPIO47 when available
+
+If using DHT11, change `DHT_TYPE` in `include/config.h`.
+If using 128x32 OLED, change `OLED_HEIGHT`.
+
+## Repository layout
+
+- `src/main.cpp` — sensor firmware, proof receipts, OLED, AI/local-language calls
+- `include/config.h.example` — copy to `include/config.h` and set WiFi/server values
+- `include/sensor_policy_contract.h` — generated firmware constants from the shared contract
+- `contracts/sensor_policy_s3_local_language_v1.json` — canonical policy/prompt/output contract
+- `tools/sensor_receiver.py` — local HTTP receiver and S3 serial bridge
+- `tools/test_sensor_policy_s3_language.py` — hard no-OLED policy/S3/HTTP verification harness
+- `tools/ai_infer_gemma_ollama.py` — Ollama-backed local GPU endpoint
+- `tools/ai_infer_stub.py` — fake endpoint for plumbing tests
+- `docs/wiring.md` — wiring notes
+- `docs/architecture.md` — expansion plan
 
 ## Setup
 
 ```bash
 cd /home/sikmindz/projects/esp32-sensor-hub
 cp include/config.h.example include/config.h
-# edit include/config.h and set WIFI_PASSWORD plus the computer LAN IP
+# edit include/config.h: WiFi password, receiver IP, AI endpoint IPs
 ```
 
 Install PlatformIO if needed:
@@ -55,56 +84,79 @@ python3 -m venv .venv
 pip install platformio
 ```
 
-Build:
+Build both supported firmware targets:
 
 ```bash
-. .venv/bin/activate
-pio run
+/home/sikmindz/.local/bin/pio run -e esp32dev
+/home/sikmindz/.local/bin/pio run -e esp32s3
 ```
 
 Flash:
 
 ```bash
-. .venv/bin/activate
-pio run -t upload --upload-port /dev/ttyUSB0
-# or /dev/ttyACM0 depending on board
+/home/sikmindz/.local/bin/pio run -e esp32dev -t upload --upload-port /dev/ttyUSB0
+# or, for S3 sensor-hub firmware:
+/home/sikmindz/.local/bin/pio run -e esp32s3 -t upload --upload-port /dev/ttyACM0
 ```
 
 Monitor:
 
 ```bash
-pio device monitor -b 115200
+/home/sikmindz/.local/bin/pio device monitor -b 115200
 ```
 
-## Run the receiver on the computer
+## Run the local receiver
+
+Static fallback mode, no S3 hardware required:
 
 ```bash
-cd /home/sikmindz/projects/esp32-sensor-hub
 python3 tools/sensor_receiver.py --host 0.0.0.0 --port 8088
 ```
 
-Test from the computer:
+Real ESP32-S3 local-language bridge:
+
+```bash
+python3 tools/sensor_receiver.py --host 0.0.0.0 --port 8088 --s3-port /dev/ttyACM0 --s3-timeout-s 25
+```
+
+Health check:
+
+```bash
+curl http://127.0.0.1:8088/health
+```
+
+Sensor post smoke test:
 
 ```bash
 curl -X POST http://127.0.0.1:8088/api/sensor \
   -H 'Content-Type: application/json' \
-  -d '{"device_id":"test","temperature_c":22.1,"humidity_pct":44.2}'
+  -d '{"device_id":"test","status":"ok","temperature_c":22.1,"temperature_f":71.8,"humidity_pct":44.2,"sensors":{"dht":{"valid":true,"last_read_ms":1}}}'
 ```
 
-The ESP32 posts to `HUB_POST_URL` from `include/config.h`. I set the initial receiver to this machine's current LAN IP, `192.168.50.181:8088`, and the future GTX 1070 inference stub to `192.168.50.69:8090`.
+Local-language smoke test:
+
+```bash
+curl -X POST http://127.0.0.1:8088/api/local_language \
+  -H 'Content-Type: application/json' \
+  -d '{"device_id":"test","uptime_ms":1000,"status":"ok","temperature_f":87.8,"humidity_pct":72,"sensors":{"dht":{"valid":true,"last_read_ms":900}}}'
+```
+
+Expected `oled_text`:
+
+```json
+"escalate."
+```
 
 ## ESP32 local endpoints
 
 Once booted, the serial monitor prints the ESP32 IP address.
 
-- `GET /status` - current device/sensor/network status
-- `GET /sensors` - latest sensor payload JSON
-- `POST /ai` - forwards sensor context plus request JSON to `AI_INFER_URL`, waits for final JSON, and shows the response on OLED
-- `POST /ai/stream` - forwards sensor context to `AI_STREAM_URL` and streams text back onto the OLED while Gemma generates it
+- `GET /status` — current device/sensor/network status
+- `GET /sensors` — latest sensor payload JSON
+- `POST /ai` — forwards sensor context plus request JSON to `AI_INFER_URL`, waits for final JSON, and shows the response on OLED
+- `POST /ai/stream` — forwards sensor context to `AI_STREAM_URL` and streams text back onto the OLED while Gemma generates it
 
-The firmware also automatically calls `AI_STREAM_URL` every `AI_INTERVAL_MS` using `AI_PROMPT`, as long as WiFi and the sensor are healthy.
-
-Example:
+Examples:
 
 ```bash
 curl http://ESP32_IP/status
@@ -113,14 +165,72 @@ curl -X POST http://ESP32_IP/ai -H 'Content-Type: application/json' -d '{"prompt
 curl -X POST http://ESP32_IP/ai/stream -H 'Content-Type: application/json' -d '{"prompt":"give a short OLED-ready room status"}'
 ```
 
-## Gemma/Ollama AI endpoint
+## Shared contract
+
+Canonical policy lives in:
+
+```text
+contracts/sensor_policy_s3_local_language_v1.json
+include/sensor_policy_contract.h
+```
+
+The JSON contract mirrors the published Rust crates:
+
+```toml
+ri-esp-policy = "0.1.1"
+ri-esp-local-language = "0.1.1"
+ri-esp-proof = "0.1.1"
+```
+
+Policy thresholds:
+
+- stale after `120000 ms`
+- hot `>= 82F`
+- cold unsupported `<= 60F`
+- humid `>= 65%`
+- dry unsupported `<= 25%`
+
+Canonical prompt/output examples:
+
+- hot + humid -> `high heat and humidity. action is ` -> `escalate.`
+- stale -> `stale data. action is ` -> `wait for fresh data.`
+- cold/dry unsupported -> `safe action is ` -> `no claim without evidence.`
+- normal -> `normal room. action is ` -> `log receipt.`
+
+## Verification
+
+No-OLED hard test:
+
+```bash
+python3 tools/test_sensor_policy_s3_language.py --rounds 1 --timeout-s 5
+```
+
+Real S3 hard test:
+
+```bash
+python3 tools/test_sensor_policy_s3_language.py --s3-port /dev/ttyACM0 --rounds 3 --timeout-s 25 --http-real-s3
+```
+
+Firmware build gates:
+
+```bash
+/home/sikmindz/.local/bin/pio run -e esp32dev
+/home/sikmindz/.local/bin/pio run -e esp32s3
+```
+
+Latest no-OLED receipt target:
+
+```text
+sensor_policy_s3_hard_test_receipt.json
+```
+
+## Gemma/Ollama endpoint
 
 Default target model: `gemma4:12b` via Ollama on the GTX 1070 machine.
 
 Run:
 
 ```bash
-cd /home/sikmindz/projects/esp32-sensor-hub
 OLLAMA_MODEL=gemma4:12b tools/run_gemma_ai.sh
 ```
 
@@ -130,45 +240,18 @@ Health check:
 curl http://127.0.0.1:8090/health
 ```
 
-Test inference:
+Boundary: this repo includes endpoint plumbing. It does not prove GPU acceleration unless the target machine has working NVIDIA drivers and the model is installed.
 
-```bash
-curl -X POST http://127.0.0.1:8090/infer \
-  -H 'Content-Type: application/json' \
-  -d '{"device_id":"esp32-proof-01","temperature_c":29.5,"humidity_pct":71,"heat_index_c":31,"status":"ok","ai_request":{"raw_body":"{\"prompt\":\"Should I ventilate the room?\"}"}}'
-```
+## Receipts written by the receiver
 
-Important: this machine currently has Ollama installed, but `gemma4:12b` must exist locally on the GTX box (`ollama list`) or be pulled before the endpoint can serve it.
+- `sensor_readings.jsonl`
+- `esp32_receipts.jsonl`
+- `esp32_s3_local_language_receipts.jsonl`
+- `sensor_policy_s3_language_receipts.jsonl`
+- `sensor_policy_s3_hard_test_receipt.json`
 
-Setup/check on the GTX box:
+These files are generated runtime evidence and are ignored by git.
 
-```bash
-cd /home/sikmindz/projects/esp32-sensor-hub
-cp tools/gemma_ai.env.example .env
-# optional: edit .env, then source it
-set -a; . ./.env; set +a
+## License
 
-tools/pull_gemma_model.sh
-tools/check_gemma_ai.sh
-```
-
-Current local receipt from this machine: `ollama list` works, but `gemma4:12b` is not installed here; `gemma4:e2b` is installed and was used only for endpoint plumbing verification. `nvidia-smi` could not communicate with the NVIDIA driver in this environment, so GTX acceleration was not verified here.
-
-## AI endpoint intent
-
-The ESP32 should not run the real model. Path:
-
-1. ESP32 collects live sensor context.
-2. Computer/server with GTX 1070 runs inference.
-3. Client asks ESP32 `/ai` or server directly.
-4. ESP32 forwards the request plus latest sensor values to the GTX server.
-5. GTX server returns result; ESP32 can display a short status on OLED and return JSON.
-6. Every `AI_INTERVAL_MS`, ESP32 also calls `/infer_stream` and writes incoming Gemma text to the OLED while tokens arrive.
-
-For the current configured target:
-
-- `AI_INFER_URL`: `http://192.168.50.69:8090/infer`
-- `AI_STREAM_URL`: `http://192.168.50.69:8090/infer_stream`
-- default model on that server: `gemma4:12b`
-
-This keeps the ESP32 as the physical-world sensor/edge endpoint and the GPU box as the inference backend.
+MIT OR Apache-2.0 unless a file says otherwise.

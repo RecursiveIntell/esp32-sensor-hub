@@ -16,6 +16,7 @@ It checks more than one happy path:
 4. HTTP `/api/local_language` bridge with real S3 serial enabled.
 5. OLED-ready text field in every integration response.
 6. Sensor hub firmware build after adding safer cold/dry/stale prompt handling.
+7. Firmware header drift guard: `include/sensor_policy_contract.h` must match `contracts/sensor_policy_s3_local_language_v1.json`.
 
 ## Important fix found during hardening
 
@@ -46,6 +47,7 @@ python3 tools/test_sensor_policy_s3_language.py --s3-port /dev/ttyACM0 --rounds 
 
 ```json
 {
+  "contract_header_ok": true,
   "ok": true,
   "failures": [],
   "policy_cases": 9,

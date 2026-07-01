@@ -33,3 +33,21 @@
 {"output":"no claim without evidence.","passed":true,"prompt":"safe action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
 {"output":"no claim without evidence.","passed":true,"prompt":"safe action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
 {"output":"log receipt.","passed":true,"prompt":"normal room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"escalate.","passed":true,"prompt":"high heat and humidity. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"no claim.","passed":true,"prompt":"missing sensor. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"wait for fresh data.","passed":true,"prompt":"stale data. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"escalate.","passed":true,"prompt":"high heat and humidity. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"check airflow.","passed":true,"prompt":"hot room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"ventilate.","passed":true,"prompt":"humid room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"no claim without evidence.","passed":true,"prompt":"safe action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"no claim without evidence.","passed":true,"prompt":"safe action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"log receipt.","passed":true,"prompt":"normal room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"escalate.","passed":true,"prompt":"high heat and humidity. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"no claim.","passed":true,"prompt":"missing sensor. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"wait for fresh data.","passed":true,"prompt":"stale data. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"escalate.","passed":true,"prompt":"high heat and humidity. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"check airflow.","passed":true,"prompt":"hot room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"ventilate.","passed":true,"prompt":"humid room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"no claim without evidence.","passed":true,"prompt":"safe action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"no claim without evidence.","passed":true,"prompt":"safe action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
+{"output":"log receipt.","passed":true,"prompt":"normal room. action is ","schema":"ri_esp32s3_local_language_v1","source":"host_canonical_p15_lookup","stop_rule":"period_or_newline_or_48_chars"}
