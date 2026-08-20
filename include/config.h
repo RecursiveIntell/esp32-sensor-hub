@@ -1,14 +1,8 @@
 #pragma once
 
-#define WIFI_SSID "PurpleMama"
-#define WIFI_PASSWORD_PRIMARY "DaDDY)#)$!1"
-#define WIFI_PASSWORD_SECONDARY "FuCKYOU)#)$!1"
+#include "config_private.h"
 
-#define HUB_POST_URL "http://192.168.50.181:8088/api/sensor"
 #define OLLAMA_MODEL "gemma4:12b"
-#define AI_INFER_URL "http://192.168.50.69:11434/api/chat"
-#define AI_STREAM_URL "http://192.168.50.69:11434/api/chat"
-#define LOCAL_LANGUAGE_URL "http://192.168.50.181:8088/api/local_language"
 #ifdef RI_ESP32S3_BUILD
 #define DEVICE_ID "esp32s3-sensor-hub-01"
 #else
@@ -32,6 +26,8 @@
 
 #define SENSOR_READ_MS 5000
 #define POST_MS 10000
-#define AI_INTERVAL_MS 300000
+#define AI_INTERVAL_MS 0
+#define LOCAL_LANGUAGE_INTERVAL_MS 300000
+#define LOCAL_LANGUAGE_TIMEOUT_MS 60000
 #define AI_STREAM_MAX_MS 120000
 #define AI_PROMPT "Do not just repeat the sensor numbers. Interpret the room comfort from the temp/humidity, say if it feels normal/humid/dry/hot/cool, and give one practical action if useful. One short OLED-friendly sentence."

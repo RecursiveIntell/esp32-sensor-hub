@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <HTTPClient.h>
+#include <ArduinoOTA.h>
 #include <Wire.h>
 #include <DHT.h>
 #include <Adafruit_GFX.h>
@@ -33,6 +34,15 @@
 #endif
 #ifndef LOCAL_LANGUAGE_URL
 #define LOCAL_LANGUAGE_URL ""
+#endif
+#ifndef LOCAL_LANGUAGE_INTERVAL_MS
+#define LOCAL_LANGUAGE_INTERVAL_MS 300000
+#endif
+#ifndef LOCAL_LANGUAGE_TIMEOUT_MS
+#define LOCAL_LANGUAGE_TIMEOUT_MS 90000
+#endif
+#ifndef OTA_PASSWORD
+#define OTA_PASSWORD ""
 #endif
 
 WebServer server(80);
@@ -444,6 +454,7 @@ void postSensors() {
   String payload = sensorJson(false);
   http.begin(HUB_POST_URL);
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-Device-Token", FLEET_DEVICE_TOKEN);
   http.setTimeout(10000);
   int code = http.POST(payload);
   String body = http.getString();
@@ -457,6 +468,12 @@ void postSensors() {
 
 void postLocalLanguage() {
   if (strlen(LOCAL_LANGUAGE_URL) == 0) return;
+  // Hermes is an interpretation tier, not a 10-second telemetry sink. Rate
+  // limit before the blocking HTTP request so failures cannot create a tight
+  // retry loop that overlaps successive gateway/model calls.
+  if (state.last_local_language_ms != 0 &&
+      millis() - state.last_local_language_ms < LOCAL_LANGUAGE_INTERVAL_MS) return;
+  state.last_local_language_ms = millis();
   if (WiFi.status() != WL_CONNECTED) {
     state.last_local_language_code = -1;
     state.last_local_language_output = "wifi_down";
@@ -467,12 +484,12 @@ void postLocalLanguage() {
   String payload = sensorJson(false);
   http.begin(LOCAL_LANGUAGE_URL);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(30000);
+  http.addHeader("X-Device-Token", FLEET_DEVICE_TOKEN);
+  http.setTimeout(LOCAL_LANGUAGE_TIMEOUT_MS);
   int code = http.POST(payload);
   String body = http.getString();
   http.end();
 
-  state.last_local_language_ms = millis();
   state.last_local_language_code = code;
   state.last_local_language_prompt = canonicalLocalLanguagePrompt();
 
@@ -650,6 +667,19 @@ void handleAiStreamNow() {
   server.send(doc["ok"] ? 200 : 502, "application/json", out);
 }
 
+void setupOta() {
+  ArduinoOTA.setHostname(DEVICE_ID);
+  if (strlen(OTA_PASSWORD) > 0) ArduinoOTA.setPassword(OTA_PASSWORD);
+  ArduinoOTA.onStart([]() {
+    drawWrappedText("OTA update", "Receiving operator-selected firmware...");
+  });
+  ArduinoOTA.onEnd([]() { drawWrappedText("OTA complete", "Rebooting..."); });
+  ArduinoOTA.onError([](ota_error_t error) {
+    drawWrappedText("OTA failed", String("error ") + int(error));
+  });
+  ArduinoOTA.begin();
+}
+
 void setupServer() {
   server.on("/status", HTTP_GET, handleStatus);
   server.on("/sensors", HTTP_GET, handleSensors);
@@ -679,6 +709,7 @@ void setup() {
   scanWifiNetworks();
   connectWifi();
   setupServer();
+  setupOta();
   readSensors();
   postSensors();
   postLocalLanguage();
@@ -690,6 +721,7 @@ void setup() {
 void loop() {
   if (WiFi.status() != WL_CONNECTED) connectWifi();
   server.handleClient();
+  ArduinoOTA.handle();
 
   unsigned long now = millis();
   if (now - state.last_read_ms >= SENSOR_READ_MS) {

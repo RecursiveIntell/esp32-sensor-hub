@@ -1,0 +1,10 @@
+#pragma once
+#define WIFI_SSID "REPLACE"
+#define WIFI_PASSWORD_PRIMARY "REPLACE"
+#define WIFI_PASSWORD_SECONDARY "REPLACE_OR_REMOVE"
+#define HUB_POST_URL "http://GATEWAY_IP:8088/api/sensor"
+#define AI_INFER_URL "http://OLLAMA_IP:11434/api/chat"
+#define AI_STREAM_URL "http://OLLAMA_IP:11434/api/chat"
+#define LOCAL_LANGUAGE_URL "http://GATEWAY_IP:8088/api/local_language"
+#define FLEET_DEVICE_TOKEN "GENERATE_UNIQUE"
+#define OTA_PASSWORD "GENERATE_UNIQUE"

@@ -1,4 +1,6 @@
 .pio/
+.vscode/
+include/config_private.h
 .venv/
 venv/
 __pycache__/
