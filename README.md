@@ -28,7 +28,7 @@ This is local-first physical AI plumbing, not a cloud demo.
 
 ## Claim boundary
 
-Proven by receipts:
+Previously reported checks (not a fresh hardware certification):
 
 - firmware builds for `esp32dev` and `esp32s3`
 - receiver policy cases pass
@@ -50,9 +50,9 @@ Default PlatformIO env: `esp32dev`
 - DHT sensor on GPIO4; `include/config.h.example` currently uses DHT11, change `DHT_TYPE` to DHT22 for AM2302/DHT22 hardware
 - SSD1306 OLED, 128x64, I2C address `0x3C`
 - ESP32 default I2C: SDA GPIO21, SCL GPIO22
-- ESP32-S3 warning: do not use GPIO8/9 for I2C on N16R8/PSRAM boards; use safe exposed pins such as GPIO21/GPIO47 when available
+- ESP32-S3 example I2C: SDA GPIO21, SCL GPIO47. These are configuration choices, not a universal board pinout. Check your exact module/board schematic for flash/PSRAM, USB, strapping, and other pin conflicts; [Espressif GPIO guidance](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/peripherals/gpio.html) describes chip-level restrictions.
 
-If using DHT11, change `DHT_TYPE` in `include/config.h`.
+DHT11 is already the example default; set `DHT_TYPE` to match the sensor actually wired.
 If using 128x32 OLED, change `OLED_HEIGHT`.
 
 ## Repository layout
@@ -71,7 +71,8 @@ If using 128x32 OLED, change `OLED_HEIGHT`.
 ## Setup
 
 ```bash
-cd /home/sikmindz/projects/esp32-sensor-hub
+git clone https://github.com/RecursiveIntell/esp32-sensor-hub.git
+cd esp32-sensor-hub
 cp include/config.h.example include/config.h
 # edit include/config.h: WiFi password, receiver IP, AI endpoint IPs
 ```
@@ -87,27 +88,27 @@ pip install platformio
 Build both supported firmware targets:
 
 ```bash
-/home/sikmindz/.local/bin/pio run -e esp32dev
-/home/sikmindz/.local/bin/pio run -e esp32s3
+pio run -e esp32dev
+pio run -e esp32s3
 ```
 
 Flash:
 
 ```bash
-/home/sikmindz/.local/bin/pio run -e esp32dev -t upload --upload-port /dev/ttyUSB0
+pio run -e esp32dev -t upload --upload-port /dev/ttyUSB0
 # or, for S3 sensor-hub firmware:
-/home/sikmindz/.local/bin/pio run -e esp32s3 -t upload --upload-port /dev/ttyACM0
+pio run -e esp32s3 -t upload --upload-port /dev/ttyACM0
 ```
 
 Monitor:
 
 ```bash
-/home/sikmindz/.local/bin/pio device monitor -b 115200
+pio device monitor -b 115200
 ```
 
 ## Run the local receiver
 
-Static fallback mode, no S3 hardware required:
+Static fallback mode, no S3 hardware required. The shown all-interface bind lets a sensor on the LAN reach it; use `--host 127.0.0.1` for laptop-only tests and review network exposure before accepting remote input:
 
 ```bash
 python3 tools/sensor_receiver.py --host 0.0.0.0 --port 8088
@@ -214,8 +215,8 @@ python3 tools/test_sensor_policy_s3_language.py --s3-port /dev/ttyACM0 --rounds 
 Firmware build gates:
 
 ```bash
-/home/sikmindz/.local/bin/pio run -e esp32dev
-/home/sikmindz/.local/bin/pio run -e esp32s3
+pio run -e esp32dev
+pio run -e esp32s3
 ```
 
 Latest no-OLED receipt target:
