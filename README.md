@@ -114,11 +114,14 @@ Static fallback mode, no S3 hardware required. The shown all-interface bind lets
 python3 tools/sensor_receiver.py --host 0.0.0.0 --port 8088
 ```
 
-Real ESP32-S3 local-language bridge:
+Real ESP32-S3 local-language bridge (install `pyserial` in the same Python environment as the receiver before enabling `--s3-port`):
 
 ```bash
+python3 -m pip install pyserial
 python3 tools/sensor_receiver.py --host 0.0.0.0 --port 8088 --s3-port /dev/ttyACM0 --s3-timeout-s 25
 ```
+
+A serial-path error can return static canonical output instead of S3 generation. Inspect `local_language.source` and the serial receipt before claiming a real S3 result; `esp32s3_serial_error_static_fallback` with `passed: false` identifies the fallback.
 
 Health check:
 
@@ -251,7 +254,7 @@ Boundary: this repo includes endpoint plumbing. It does not prove GPU accelerati
 - `sensor_policy_s3_language_receipts.jsonl`
 - `sensor_policy_s3_hard_test_receipt.json`
 
-These files are generated runtime evidence and are ignored by git.
+These are runtime evidence destinations. Four listed files are tracked in this snapshot, and `.gitignore` does not ignore the listed JSON/JSONL paths. Review generated changes before committing or sharing them.
 
 ## License
 
