@@ -1,5 +1,7 @@
 # ESP32 Sensor Hub
 
+<!-- last-verified: 2026-10-23 -->
+
 ![ESP32 sensor hub architecture](assets/architecture.svg)
 
 ESP32/ESP32-S3 room sensor firmware plus a local receiver bridge. It reads DHT temperature/humidity, displays status on SSD1306 OLED, emits receipt-backed sensor JSON, and routes deterministic sensor policy prompts into an ESP32-S3 local-language model.
@@ -108,11 +110,20 @@ pio device monitor -b 115200
 
 ## Run the local receiver
 
-Static fallback mode, no S3 hardware required. The shown all-interface bind lets a sensor on the LAN reach it; use `--host 127.0.0.1` for laptop-only tests and review network exposure before accepting remote input:
+Static fallback mode, no S3 hardware required. The receiver defaults to `0.0.0.0:8088` and accepts plain HTTP requests without authentication. The shown all-interface bind lets a sensor on the LAN reach it; use `--host 127.0.0.1` for laptop-only tests and do not expose it to untrusted networks:
 
 ```bash
 python3 tools/sensor_receiver.py --host 0.0.0.0 --port 8088
 ```
+
+Receiver options (source defaults):
+
+| Option | Default | Purpose |
+|---|---:|---|
+| `--host` | `0.0.0.0` | Bind address; use `127.0.0.1` for loopback-only access. |
+| `--port` | `8088` | HTTP listening port. |
+| `--s3-port` | unset | Optional serial port for the ESP32-S3 language bridge. |
+| `--s3-timeout-s` | `12.0` | Serial request timeout in seconds; the hardware example below overrides it to `25`. |
 
 Real ESP32-S3 local-language bridge (install `pyserial` in the same Python environment as the receiver before enabling `--s3-port`):
 
@@ -231,6 +242,19 @@ sensor_policy_s3_hard_test_receipt.json
 ## Gemma/Ollama endpoint
 
 Default target model: `gemma4:12b` via Ollama on the GTX 1070 machine.
+
+The endpoint listens on `0.0.0.0:8090` by default and serves plain HTTP without request authentication. Keep it on a trusted network. For loopback-only access, start the Python script directly with `--host 127.0.0.1`; `tools/run_gemma_ai.sh` explicitly binds to `0.0.0.0`. The Python script's options and corresponding environment overrides are:
+
+| Option | Environment variable | Default | Purpose |
+|---|---|---|---|
+| `--host` | `AI_HOST` | `0.0.0.0` | Endpoint bind address. |
+| `--port` | `AI_PORT` | `8090` | Endpoint listening port. |
+| `--model` | `OLLAMA_MODEL` | `gemma4:12b` | Ollama model name; the model must be installed in Ollama. |
+| `--ollama-url` | `OLLAMA_URL` | `http://127.0.0.1:11434` | Ollama HTTP API base URL. |
+| `--timeout` | `OLLAMA_TIMEOUT` | `180` | Request timeout in seconds. |
+| `--num-predict` | `OLLAMA_NUM_PREDICT` | `160` | Maximum generated tokens passed to Ollama. |
+
+`tools/run_gemma_ai.sh` reads `OLLAMA_MODEL` and `OLLAMA_URL`; the other environment-variable overrides apply when starting `tools/ai_infer_gemma_ollama.py` directly. CLI options take precedence over their corresponding environment variables.
 
 Run:
 
