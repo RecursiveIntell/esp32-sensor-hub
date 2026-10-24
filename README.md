@@ -254,7 +254,7 @@ The endpoint listens on `0.0.0.0:8090` by default and serves plain HTTP without 
 | `--timeout` | `OLLAMA_TIMEOUT` | `180` | Request timeout in seconds. |
 | `--num-predict` | `OLLAMA_NUM_PREDICT` | `160` | Maximum generated tokens passed to Ollama. |
 
-`tools/run_gemma_ai.sh` reads `OLLAMA_MODEL` and `OLLAMA_URL`; the other environment-variable overrides apply when starting `tools/ai_infer_gemma_ollama.py` directly. CLI options take precedence over their corresponding environment variables.
+`tools/run_gemma_ai.sh` passes `OLLAMA_MODEL` and `OLLAMA_URL` as CLI options and fixes the bind address and port at `0.0.0.0:8090`, overriding `AI_HOST` and `AI_PORT`. The child Python process still reads inherited `OLLAMA_TIMEOUT` and `OLLAMA_NUM_PREDICT`. Start `tools/ai_infer_gemma_ollama.py` directly to choose another host or port. Explicit CLI options take precedence over their corresponding environment defaults.
 
 Run:
 
